@@ -29,6 +29,10 @@ And can be automatically purged based on time or size parameters.
 Eg. Keep 100 MBytes or for 1 year, which every limit is reached first.
 
 
+## If you want code to follow along
+
+.link https://github.com/siuyin/present-using_apache_kafka_with_go
+
 ## A Go Kafka Subscriber / Consumer
 
 .code cmd/sub/main.go /func main\(/,/^}/
@@ -123,3 +127,6 @@ ca1 does not receive events
 
 p1 --> cb1
 
+## Presentation and code repository
+
+.link https://github.com/siuyin/present-using_apache_kafka_with_go
