@@ -4,4 +4,122 @@
 Loh Siu Yin
 siuyin@xendit.co
 
-## Slide 1
+## Apache Kafka
+Apache Kafka is an open-source **distributed**   **event**   **streaming** platform.
+
+**Distributed**: runs on more than one machine
+
+**Event**: something significant that occurred
+
+**Streaming**: a continous flow (of events)
+
+---
+Written in java.
+
+Uses `zookeeper` to maintain distributed state.
+
+## Kafka is publish / subscribe 
+Kakfa clients can publish events to the kafka cluster.
+
+Many other clients can subscribe to these events.
+
+These events are saved on disk in the kafka cluster.
+
+And can be automatically purged based on time or size parameters.  
+Eg. Keep 100 MBytes or for 1 year, which every limit is reached first.
+
+
+## A Go Kafka Subscriber / Consumer
+
+.code cmd/sub/main.go /func main\(/,/^}/
+
+## Consumer configuration
+
+.code cmd/sub/main.go /func cfg\(/,/^}/
+
+## Consumers consume from a Topic
+
+.image topics.png _ 1000
+
+I will discuss partitions and replicas later.
+
+## A Go Kakfa Publisher / Producer
+
+.code cmd/pub/main.go /func main\(/,/^}/
+
+## publishTime producer
+
+.code cmd/pub/main.go /func publishTime\(/,/^}/
+
+## printDelvMsg feedback channel
+
+Kakfa is designed for high throughput applications.
+
+Events are produced (published) without waiting for
+acknowlegements from the kafka cluster.
+Acks or NAcks from the kafka cluster are delivered
+to the client's Go `channel`.
+
+.code cmd/pub/main.go /func printDelvMsg\(/,/^}/
+
+## Working with a topic with a single partition
+
+.image topics.png _ 1000
+
+
+```
+ . local.env.secret
+export TOPIC=ter
+
+go run cmd/sub/main.go
+
+go run cmd/pub/main.go
+```
+
+## Topic partitions and replicas
+**Partitions** split an event stream into sub-streams.
+
+Each sub-stream or `partition` can be fed into a consumer.  
+If there are 3 partitions (p1,p2,p3) and 2 consumers (c1, c2):  
+ - p1 and p3 may be fed into c1  
+ - p2 may be fed into c2
+
+
+c1 and c2 work together as a "team" or consumer group.
+
+Multiple consumer groups can subscribe to a single topic.
+
+**Replicas** allow for copies of events to be made across partitions.
+This serves a data protection, should a kakfa node (broker) fail.
+
+## Topic with 3 partitions and 2 consumers working in a group
+
+.image topics.png _ 1000
+
+```
+ . local.env.secret
+export TOPIC=test
+
+go run cmd/sub/main.go
+
+go run cmd/pub/main.go
+```
+
+## Consumer Group IDs
+Consumers identify themselves as belonging to a group with their `group.id`.
+
+.code cmd/sub/main.go /func cfg\(/,/^}/
+
+## Having more consumers in a group than partitions
+
+If we have more consumers in a group than the number of partitions,
+some of the consumers will not received events.
+
+eg. Say a topic has 1 partition (p1) and 2 consumers (ca1,ca2) working in a group "A"
+ and 1 consumer (cb1) working in group "B"
+
+if p1 --> ca2 , then  
+ca1 does not receive events
+
+p1 --> cb1
+
